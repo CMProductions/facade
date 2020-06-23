@@ -17,7 +17,7 @@ abstract class FacadeAccessor
     /**
      * Prevent misuse. Instances should not be extending this class, or black magic happens.
      */
-    final private function __construct()
+    private function __construct()
     {
     }
 
