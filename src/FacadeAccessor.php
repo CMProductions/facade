@@ -1,5 +1,8 @@
 <?php
+
 namespace Mrubiosan\Facade;
+
+use Psr\Container\ContainerInterface;
 
 /**
  * A bridge allowing static calls from the alias to be forwarded to the instance returned by
@@ -10,12 +13,13 @@ namespace Mrubiosan\Facade;
 abstract class FacadeAccessor
 {
     /**
-     * @var FacadeServiceLocatorInterface
+     * @var ContainerInterface
      */
-    static private $serviceLocator;
+    private static $serviceLocator;
 
     /**
      * Prevent misuse. Instances should not be extending this class, or black magic happens.
+     * @codeCoverageIgnore Covered by \Mrubiosan\Facade\Tests\Unit\FacadeAccessorTest::testItDisablesConstructor
      */
     private function __construct()
     {
@@ -23,9 +27,9 @@ abstract class FacadeAccessor
 
     /**
      * Sets the service locator
-     * @param FacadeServiceLocatorInterface $serviceLocator
+     * @param ContainerInterface $serviceLocator
      */
-    final public static function setServiceLocator(FacadeServiceLocatorInterface $serviceLocator)
+    final public static function setServiceLocator(ContainerInterface $serviceLocator)
     {
         self::$serviceLocator = $serviceLocator;
     }
@@ -54,16 +58,10 @@ abstract class FacadeAccessor
     }
 
     /**
-     * This should be the associated service name to this facade.
-     * This value will be passed into the service locator.
-     * @return string The name of the associated service
-     *
-     * @throws \LogicException When not implemented by parent class
+     * Returns the string identifier that will be used to get an instance from the service locator
+     * @return string
      */
-    public static function getServiceName()
-    {
-        throw new \LogicException(__METHOD__.' must be implemented by subclass');
-    }
+    abstract public static function getServiceName();
 
     /**
      * Calls the instance methods
@@ -74,17 +72,8 @@ abstract class FacadeAccessor
      *
      * @throws \LogicException
      */
-    public static function __callStatic($name, array $arguments)
+    public static function __callStatic(string $name, array $arguments)
     {
-        $callable = [
-            self::getService(),
-            $name,
-        ];
-
-        if (empty($arguments)) {
-            return $callable();
-        } else {
-            return call_user_func_array($callable, $arguments);
-        }
+        return self::getService()->$name(...$arguments);
     }
 }
